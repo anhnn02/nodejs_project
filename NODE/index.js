@@ -4,7 +4,7 @@ const cors = require('cors')
 const bodyParser = require('body-parser')
 const passport = require('passport');
 const cookieSession = require('cookie-session');
-require('./passport-setup');
+require('./passport');
 
 app.use(cors());
 
@@ -26,6 +26,7 @@ const isLoggedIn = (req, res, next) =>{
     res.sendStatus('401');
   }
 }
+
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -36,7 +37,7 @@ app.get('/failed', function (req, res) {
   res.send('You failed')
 })
 app.get('/good', isLoggedIn, function (req, res) {
-  res.send('Welcome hello ${red.user.email}')
+  res.send(`Welcome hello ${red.user.displayName}`)
 })
  
 app.get('/google',
