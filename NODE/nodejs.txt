@@ -1,0 +1,150 @@
+ // // Tạo 1 bảng trong db
+  // // dbo.createCollection(
+  // //   'test',
+  // //   (err, res) =>{
+  // //     if(err) throw err;
+  // //     console.log("Tao bang thanh cong");
+  // //   }
+  // // )
+
+  // //Them 1 du lieu vao bang
+  // var obj = {
+  //   email: "trang@gmail.com",
+  //   pass: "trang",
+  // };
+
+  // dbo.collection("user").insertOne(obj, (err, result) => {
+  //   if (err) throw err;
+  //   console.log("Tao du lieu thanh cong");
+  //   console.log(result);
+  //   db.close();
+  // });
+
+  // // lay du lieu
+  // // dbo.collection("user").find().toArray((err, obj) => {
+  // //   if (err) throw err;
+  // //   if(obj.length != 0) console.log("Lay du lieu thanh cong");
+  // //   console.log(obj);
+  // //   db.close();
+  // // })
+
+  // // xoa du lieu
+  // // var query = {
+  // //   email: "trang@gmail.com",
+  // // }
+  // // dbo.collection("user").deleteOne(query, (err, obj) => {
+  // //   if(err) throw err;
+  // //   if(obj.length != 0) console.log("Xoa du lieu thanh cong");
+  // //   console.log(obj);
+  // //   db.close();
+  // // });
+
+  // //update du lieu
+  // var query = {
+  //   email: "anh@gmail.com",
+  // };
+  // var newVal = {
+  //   $set: {
+  //     email: "anh123@gmail.com",
+  //     pass: "anh123",
+  //   },
+  // };
+  // dbo.collection("user").updateOne(query, newVal, (err, obj) => {
+  //   if (err) throw err;
+  //   if (obj.length != 0) console.log("Cap nhat du lieu thanh cong");
+  //   console.log(obj);
+  //   db.close();
+  // });
+
+  //------------------------------------------------------------------------------
+  const express = require("express");
+const app = express();
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const passport = require("passport");
+
+const MongoClient = require("mongodb").MongoClient;
+var url =
+  "mongodb+srv://anhnn02:anhnn02@cluster0.cngtn.mongodb.net/excel?retryWrites=true&w=majority";
+
+// const mongoose = require("mongoose");
+// mongoose.connect("mongodb://localhost:27017/excel");
+// var user = require("./models/user");
+
+// mongoose.connect(mongoose, { useNewUrlParser: true, useUnifiedTopology: true }).then(() => console.log('DB Connected!'));
+
+// const db = mongoose.connection;
+// db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+
+const cookieSession = require("cookie-session");
+require("./passport");
+
+app.use(cors());
+
+//parse application/x-www-form-urlencoded
+app.use(bodyParser.urlencoded({ extended: false }));
+
+// parse application/json
+app.use(bodyParser.json());
+
+app.use(
+  cookieSession({
+    name: "tuto-session",
+    keys: ["key1", "key2"],
+  })
+);
+
+const isLoggedIn = (req, res, next) => {
+  if (req.user) {
+    next();
+  } else {
+    res.sendStatus("401");
+  }
+};
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get("/", function (req, res) {
+  res.send("You logout!");
+});
+app.get("/failed", function (req, res) {
+  res.send("You failed");
+});
+app.get("/good", isLoggedIn, function (req, res) {
+  res.send(`Welcome hello ${req.user.displayName}`);
+});
+app.get(
+  "/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+app.get(
+  "/google/callback",
+  passport.authenticate("google", { failureRedirect: "/failed" }),
+  function (req, res) {
+    // Successful authentication, redirect home.
+    res.redirect("/good");
+  }
+);
+//--------------------------------
+app.get("/logout", (req, res) => {
+  req.session = null;
+  req.logout();
+  res.redirect("/");
+});
+
+//--------------------------------
+
+var mongo = new MongoClient(url, { useNewUrlParser: true });
+
+mongo.connect((err, db) => {
+  if (err) throw err;
+  console.log("Kết nối DB thành công!");
+
+//   // Chọn db để use
+//   var dbo = db.db("excel");
+ 
+});
+
+app.listen(3000);
+
